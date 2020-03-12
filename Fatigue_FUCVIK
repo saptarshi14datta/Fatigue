@@ -1,0 +1,111 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Mar  5 08:20:17 2020
+@author: b0589940
+FATIGUE CALCULATOR
+"""
+import pandas as pd
+
+"""
+repetition_file_path = input("Please input the file path of the repetition file: ")
+control_file_path = input("Please input the file path of the control file: ")
+mission_def_file_path = input("Please input the file path of the mission def file: ")
+loads_file_path = input("Please input the file path of the loads file: ")
+"""
+
+repetition_file_path = str("E:\Structures References\Stress\DT\COURSES\Fatigue_and_Damage_Tolerance_150811\Day1_150811\Day1-Overview_Spectra_Golihat\BD700.7_8.L1D.rep.txt")
+control_file_path = str(r"Z:\_0_Stress_CERT_WIP\5. Damage Tolerance\CM BD700-M170-BA6E-STL-0466_E\BD700.7.L2V02.SR.FUS.ldp")
+mission_def_file_path = str(r"Z:\_0_Stress_CERT_WIP\5. Damage Tolerance\CM BD700-M170-BA6E-STL-0466_E\BD700.7.L2V02.SR.RFUS.def")
+loads_file_path = str(r"Z:\_0_Stress_CERT_WIP\2. Internal_Loads\FEM\06.BD700\01.L2V02_EIS\01.L2V02-EIS\02.results\02.fatigue\BD700.7.L2V02-EIS.Fatigue.All_Missions.FUSE_REAR.elfo")
+
+Element_no = 1691263
+Load_direction = "FX"
+
+#REPITION FILE PARSING
+repetition_file = pd.read_csv(repetition_file_path, delimiter ="\t", header=None, names=["Flight Type No.", "Repetition"])
+
+
+#CONTROL FILE PARSING
+fwidths = [10,7,5,39,4]
+control_file = pd.read_fwf(control_file_path, widths = fwidths, header=None, skiprows=8, names=["Internal Load Case ID", "Load Factor", "Pairing Case Line Ref", "Load Case Description", "Line Number"])
+control_file.drop(control_file.tail(1).index,inplace=True)
+control_file['Internal Load Case ID'] = control_file['Internal Load Case ID'].astype(int)
+control_file['Line Number'] = control_file['Line Number']*-1
+control_file.index=control_file.index+1
+
+#MISSION DEFINITION FILE PARSING
+fwidths =  [5,6,8,6,8,6,8,6,8,6,8,6,8,8,4,22]
+mission_def_file = pd.read_fwf(mission_def_file_path, widths = fwidths, header=None, skiprows=2)
+mission_def_file = mission_def_file.fillna(0.0)
+mission_def_file = mission_def_file.replace(",","",regex=True)
+
+for i in range(1,11,2):
+    mission_def_file[i] = mission_def_file[i].astype(str).str.replace("-","")       
+mission_def_file[14] = mission_def_file[14].astype(str).str.replace("-","")
+
+for i in range(0,15,1):
+    mission_def_file[i] = pd.to_numeric(mission_def_file[i])
+
+#LOAD FILES
+loads_file = pd.read_csv(loads_file_path,skiprows=3,delimiter=r"\s+",engine="python")
+loads_file.dropna(axis=1,how='any',inplace=True)
+
+
+
+
+
+
+
+for row in mission_def_file.rows():
+    
+    #Determine the mean and alternating load couples
+    no_load_couple =  mission_def_file.iloc[row, 0]
+    
+    alt_load_couple_1 = mission_def_file.iloc[row, 1]
+    alt_load_couple_2 = mission_def_file.iloc[row, 3]
+    
+    alt_load_couple_fact1 = mission_def_file.iloc[row, 2]
+    alt_load_couple_fact2 = mission_def_file.iloc[row, 4]
+    
+    mean_load_couple_1 = mission_def_file.iloc[row, 5]
+    mean_load_couple_2 = mission_def_file.iloc[row, 7]
+    mean_load_couple_3 = mission_def_file.iloc[row, 9]
+    
+    mean_load_couple_fact1 = mission_def_file.iloc[row, 6]
+    mean_load_couple_fact2 = mission_def_file.iloc[row, 8]    
+    mean_load_couple_fact3 = mission_def_file.iloc[row, 10]     
+
+
+    #Finding the relevant load cases
+    lc_alt_load_1 = control_file.iloc[alt_load_couple_1,control_file.columns.get_loc('Internal Load Case ID')]
+    lc_alt_load_2 = control_file.iloc[alt_load_couple_2,control_file.columns.get_loc('Internal Load Case ID')]
+    
+    lc_mean_load_1 = control_file.iloc[mean_load_couple_1,control_file.columns.get_loc('Internal Load Case ID')]
+    lc_mean_load_2 = control_file.iloc[mean_load_couple_2,control_file.columns.get_loc('Internal Load Case ID')]
+    lc_mean_load_3 = control_file.iloc[mean_load_couple_3,control_file.columns.get_loc('Internal Load Case ID')]
+
+    #Find the relevant loads
+    
+    load_alt_load_1 = loads_file.loc[(loads_file['ELEM']==Element_no)&(loads_file['TYP']==Load_direction)][lc_alt_load_1].values
+    
+    point_1[row] = (load_alt_load_1-load_mean_load_1)*alt_load_couple_fact1+load_mean_load_1*mean_load_couple_fact1+load_mean_load_2*mean_load_couple_fact2+load_mean_load_3*mean_load_couple_fact3
+    point_2[row] = (load_alt_load_2-load_mean_load_1)*alt_load_couple_fact1+load_mean_load_1*mean_load_couple_fact1+load_mean_load_2*mean_load_couple_fact2+load_mean_load_3*mean_load_couple_fact3
+
+    print("a")
+
+
+    
+"""
+def  get_load_point_1(line,load_couple):
+    
+    
+    
+    print("A")
+
+def  get_load_point_2():
+    print("A")
+
+#mission_def_file.loc[:,["1","3","5","7","9","11","14"]].replace(",","").astype(int)
+
+mission_def_file[[1,3,5,7,9,11,14]].replace("-","")
+"""
